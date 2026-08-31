@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Become a Mentor</title>
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --border: #cbd5e1;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success-bg: #dcfce7;
+      --success-text: #166534;
+    }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 40px 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: var(--card-bg); padding: 32px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    h2 { margin-top: 0; color: #0f172a; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
+    input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+    input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    button { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: var(--primary-hover); }
+    .hidden { display: none; }
+    #successMessage { background: var(--success-bg); color: var(--success-text); padding: 16px; border-radius: 6px; margin-top: 20px; text-align: center; font-weight: 500; }
+    #errorMessage { color: #dc2626; font-size: 14px; margin-top: 8px; display: none; }
+  </style>
+</head>
+<body>
+
+    <!-- <a href="/path-to-your-new-form/mentor
+    .html" target="_blank" rel="noopener noreferrer" class="mentor-btn">
+  Become a mentor
+</a> -->
+  <div class="container">
+    <h2>Mentor Application</h2>
+    <p>Fill out the details below to apply as a mentor.</p>
+
+    <form id="mentorForm">
+      <div class="form-group">
+        <label for="fullName">Full Name</label>
+        <input type="text" id="fullName" name="fullName" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" required>
+        <div id="errorMessage"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" required>
+      </div>
+
+      <div class="form-group">
+        <label for="areaOfInterest">Area of Interest</label>
+        <input type="text" id="areaOfInterest" name="areaOfInterest" placeholder="e.g., Frontend, Cybersecurity" required>
+      </div>
+
+      <div class="form-group">
+        <label for="mentorshipFocus">Mentorship Focus</label>
+        <input type="text" id="mentorshipFocus" name="mentorshipFocus" placeholder="e.g., Career advice, Technical skills" required>
+      </div>
+
+      <div class="form-group">
+        <label for="bio">Short Bio</label>
+        <textarea id="bio" name="bio" rows="4" required></textarea>
+      </div>
+
+      <button type="submit" id="submitBtn">Submit Application</button>
+    </form>
+
+    <div id="successMessage" class="hidden">
+      🎉 Application submitted successfully! We will review it shortly.
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('mentorForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const form = e.target;
+      const submitBtn = document.getElementById('submitBtn');
+      const errorMsg = document.getElementById('errorMessage');
+      
+      // Gather form data
+      const formData = {
+        fullName: document.getElementById('fullName').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        areaOfInterest: document.getElementById('areaOfInterest').value,
+        mentorshipFocus: document.getElementById('mentorshipFocus').value,
+        bio: document.getElementById('bio').value,
+      };
+
+      try {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Submitting...";
+        errorMsg.style.display = 'none';
+
+        // Send to backend API
+        const response = await fetch('http://localhost:3000/api/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          form.classList.add('hidden');
+          document.getElementById('successMessage').classList.remove('hidden');
+        } else {
+          errorMsg.innerText = result.error || "Submission failed. Please try again.";
+          errorMsg.style.display = 'block';
+        }
+      } catch (error) {
+        errorMsg.innerText = "Network error. Is the backend server running?";
+        errorMsg.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Submit Application";
+      }
+    });
+  </script>
+</body>
+</html>

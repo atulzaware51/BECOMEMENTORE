@@ -1,0 +1,340 @@
+
+/* =========================================
+   GLOBAL
+   ========================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background:
+        radial-gradient(
+            circle at top left,
+            rgba(60, 70, 100, 0.18),
+            transparent 40%
+        ),
+        #0b0d12;
+    color: #ffffff;
+}
+
+
+/* =========================================
+   PAGE
+   ========================================= */
+
+.mentor-page {
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 60px 20px;
+}
+
+
+/* =========================================
+   CONTAINER
+   ========================================= */
+
+.mentor-container {
+    width: 100%;
+    max-width: 720px;
+
+    padding: 45px;
+
+    background: rgba(20, 23, 31, 0.94);
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.45);
+}
+
+
+/* =========================================
+   HEADER
+   ========================================= */
+
+.mentor-header {
+    margin-bottom: 35px;
+}
+
+.eyebrow {
+    display: inline-block;
+
+    margin-bottom: 12px;
+
+    font-size: 12px;
+
+    letter-spacing: 2px;
+
+    color: #9da5b4;
+}
+
+.mentor-header h1 {
+    font-size: clamp(36px, 6vw, 58px);
+
+    line-height: 1.05;
+
+    margin-bottom: 18px;
+}
+
+.mentor-header p {
+    color: #aeb5c2;
+
+    line-height: 1.7;
+
+    font-size: 16px;
+}
+
+
+/* =========================================
+   FORM
+   ========================================= */
+
+.mentor-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 22px;
+}
+
+.form-group {
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 9px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    color: #dce1ea;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+
+    padding: 14px 16px;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    border-radius: 10px;
+
+    background: #11141b;
+
+    color: #ffffff;
+
+    font-size: 15px;
+
+    outline: none;
+
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        background 0.25s ease;
+}
+
+.form-group textarea {
+    resize: vertical;
+
+    min-height: 140px;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #6f7785;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #8b93a5;
+
+    background: #141821;
+
+    box-shadow:
+        0 0 0 3px rgba(139, 147, 165, 0.08);
+}
+
+
+/* =========================================
+   ERROR
+   ========================================= */
+
+.error-message {
+    display: block;
+
+    min-height: 18px;
+
+    margin-top: 6px;
+
+    font-size: 12px;
+
+    color: #ff7b7b;
+}
+
+
+/* =========================================
+   CHARACTER COUNTER
+   ========================================= */
+
+.character-counter {
+    margin-top: 7px;
+
+    text-align: right;
+
+    font-size: 12px;
+
+    color: #6f7785;
+}
+
+
+/* =========================================
+   SUBMIT BUTTON
+   ========================================= */
+
+.submit-btn {
+    width: 100%;
+
+    padding: 15px 20px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #0b0d12;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+}
+
+.submit-btn:disabled {
+    cursor: not-allowed;
+
+    opacity: 0.6;
+
+    transform: none;
+}
+
+
+/* =========================================
+   SUCCESS
+   ========================================= */
+
+.success-message {
+    text-align: center;
+
+    padding: 30px 10px;
+}
+
+.success-icon {
+    width: 70px;
+    height: 70px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 20px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    font-size: 32px;
+}
+
+.success-message h2 {
+    margin-bottom: 12px;
+
+    font-size: 30px;
+}
+
+.success-message p {
+    max-width: 500px;
+
+    margin: 0 auto 25px;
+
+    color: #aeb5c2;
+
+    line-height: 1.7;
+}
+
+.success-message button {
+    padding: 12px 20px;
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: #ffffff;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   UTILITIES
+   ========================================= */
+
+.hidden {
+    display: none;
+}
+
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .mentor-page {
+        padding: 25px 15px;
+    }
+
+    .mentor-container {
+        padding: 28px 20px;
+    }
+
+    .mentor-header h1 {
+        font-size: 38px;
+    }
+
+}
+
