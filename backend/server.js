@@ -253,3 +253,46 @@ app.patch('/api/admin/applications/:id/status', authenticateAdmin, async (req, r
 //     res.status(500).json({ error: "Failed to process application update." });
 //   }
 // });
+
+
+////
+// Export all mentor applications as a downloadable CSV (opens in Excel)
+app.get('/api/admin/export-excel', authenticateAdmin, async (req, res) => {
+  try {
+    // 1. Fetch all mentor applications from Prisma database
+    const applications = await prisma.application.findMany({
+      orderBy: { submittedAt: 'desc' }
+    });
+
+    // 2. Define CSV Headers
+    let csvContent = "ID,Full Name,Email,Phone,Area of Interest,Mentorship Focus,Status,Submitted Date\n";
+
+    // 3. Loop through rows and format data safely (wrapping strings in quotes to prevent comma breaks)
+    applications.forEach(app => {
+      const date = new Date(app.submittedAt).toISOString().split('T')[0];
+      const row = [
+        app.id,
+        `"${app.fullName || ''}"`,
+        `"${app.email || ''}"`,
+        `"${app.phone || ''}"`,
+        `"${app.areaOfInterest || ''}"`,
+        `"${app.mentorshipFocus || ''}"`,
+        app.status,
+        date
+      ];
+      csvContent += row.join(",") + "\n";
+    });
+
+    // 4. Set headers to force file download in the browser
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="mentor-applications.csv"');
+    
+    // 5. Send the file content back
+    res.status(200).send(csvContent);
+
+  } catch (error) {
+    console.error("Export error:", error);
+    res.status(500).json({ error: "Failed to generate spreadsheet export." });
+  }
+});
+
