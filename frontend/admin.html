@@ -104,6 +104,34 @@
   </div>
 
   <script>
+async function exportToExcel() {
+  const token = localStorage.getItem('adminToken');
+  
+  try {
+    const response = await fetch('http://localhost:3000/api/admin/export-excel', {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) throw new Error("Export failed");
+
+    // Convert response into a downloadable file blob
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mentor-applications-${new Date().toISOString().split('T')[0]}.csv`;
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    alert("Failed to download spreadsheet. Ensure you are logged in as admin.");
+  }
+}
+    
     const token = localStorage.getItem('adminToken');
     if (token) loadDashboard();
 
