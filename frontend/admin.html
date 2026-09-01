@@ -45,6 +45,7 @@
 <body>
 
   <!-- LOGIN SCREEN -->
+  
   <div id="loginScreen" class="container login-box">
     <h2>Admin Portal Login</h2>
     <div id="loginError" style="color: #dc2626; margin-bottom: 12px; display: none;">Invalid admin credentials</div>
@@ -62,7 +63,18 @@
   </div>
 
   <!-- DASHBOARD SCREEN -->
+
+  
   <div id="dashboardScreen" class="hidden">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+  <h2>Mentor Applications Review</h2>
+  <div>
+    <!-- NEW EXPORT BUTTON -->
+    <button onclick="exportToExcel()" style="width: auto; padding: 8px 16px; background: #16a34a; margin-right: 10px;">📊 Download Excel/CSV</button>
+    <button onclick="logout()" style="width: auto; padding: 8px 16px; background: #ef4444;">Logout</button>
+  </div>
+</div>
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
       <h2>Mentor Applications Review</h2>
       <button onclick="logout()" style="width: auto; padding: 8px 16px; background: #ef4444;">Logout</button>
