@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -95,6 +95,8 @@
   </div>
 
   <script>
+    const BACKEND_URL = 'https://becomementore.onrender.com';
+
     const token = localStorage.getItem('adminToken');
     if (token) loadDashboard();
 
@@ -103,7 +105,7 @@
       const email = document.getElementById('adminEmail').value;
       const password = document.getElementById('adminPassword').value;
       
-      const res = await fetch('https://becomementore.onrender.com/api/applications', {
+      const res = await fetch(`${BACKEND_URL}/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -128,7 +130,7 @@
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('dashboardScreen').classList.remove('hidden');
       
-      const res = await fetch('http://localhost:3000/api/admin/applications', {
+      const res = await fetch(`${BACKEND_URL}/api/admin/applications`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
       });
       
@@ -166,7 +168,7 @@
       inspector.scrollTop = inspector.scrollHeight;
 
       try {
-        const res = await fetch(`http://localhost:3000/api/admin/applications/${id}/status`, {
+        const res = await fetch(`${BACKEND_URL}/api/admin/applications/${id}/status`, {
           method: 'PATCH',
           headers: { 
             'Content-Type': 'application/json',
@@ -200,7 +202,7 @@
       
       try {
         inspector.innerHTML += `\n[ACTION] Requesting spreadsheet export from backend...`;
-        const response = await fetch('http://localhost:3000/api/admin/export-excel', {
+        const response = await fetch(`${BACKEND_URL}/api/admin/export-excel`, {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${token}` }
         });
