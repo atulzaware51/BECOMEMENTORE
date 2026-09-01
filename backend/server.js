@@ -114,3 +114,57 @@ app.patch('/api/admin/applications/:id/status', async (req, res) => {
     res.status(500).json({ error: "Failed to update status." });
   }
 });
+const crypto = require('crypto');
+const { ethers } = require('ethers');
+
+// Setup Blockchain Connection Provider
+const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_POLYGON_RPC_URL);
+const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY, provider);
+
+// A simple interface matching a standard storage Smart Contract
+const contractABI = ["function storeHash(string memory dataHash) public returns (uint256)"];
+const contract = new ethers.Contract(process.env.BLOCKCHAIN_CONTRACT_ADDRESS, contractABI, wallet);
+app.patch('/api/admin/applications/:id/status', authenticateAdmin, async (req, res) => {
+  try {
+    const appId = parseInt(req.params.id);
+    const { status } = req.body;
+
+    // 1. Update database
+    const updatedApplication = await prisma.application.update({
+      where: { id: appId },
+      data: { status: status }
+    });
+
+    let blockchainData = null;
+
+    // 2. If status is ACCEPTED, log to blockchain and return proof
+    if (status === 'ACCEPTED') {
+      const rawData = `${updatedApplication.id}-${updatedApplication.email}-${updatedApplication.status}`;
+      const dataHash = crypto.createHash('sha256').update(rawData).digest('hex');
+      
+      console.log(`Securing hash to blockchain: ${dataHash}`);
+
+      // Send to blockchain
+      const tx = await contract.storeHash(dataHash);
+      const receipt = await tx.wait();
+
+      console.log(`Blockchain confirmation successful. Tx: ${receipt.hash}`);
+
+      blockchainData = {
+        dataHash: dataHash,
+        txHash: receipt.hash,
+        blockNumber: receipt.blockNumber
+      };
+    }
+
+    // Return application data AND blockchain proof to the frontend
+    res.status(200).json({ 
+      application: updatedApplication,
+      blockchain: blockchainData 
+    });
+
+  } catch (error) {
+    console.error("Status update error:", error);
+    res.status(500).json({ error: "Failed to update status or write to blockchain." });
+  }
+});

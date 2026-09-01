@@ -3,15 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure Admin Dashboard</title>
+  <title>Admin Dashboard - Mentors</title>
   <style>
-    /* Keep all your existing CSS here */
-    :root { --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #0f172a; --border: #e2e8f0; --primary: #2563eb; }
+    :root {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+    }
     body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 40px; }
     .container { background: var(--card-bg); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; padding: 30px;}
     table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 20px;}
     th, td { padding: 16px 20px; border-bottom: 1px solid var(--border); }
-    th { background: #f8fafc; font-weight: 600; font-size: 13px; text-transform: uppercase; }
+    th { background: #f8fafc; font-weight: 600; font-size: 13px; text-transform: uppercase; color: #475569; }
     .hidden { display: none !important; }
     
     /* Login Form Styles */
@@ -21,12 +26,16 @@
     input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
     button { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; }
     
-    /* Status styles from previous step */
+    /* Status styles */
     .status-select { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid transparent; cursor: pointer; outline: none; }
     .status-PENDING { background: #fef08a; color: #854d0e; }
     .status-REVIEWING { background: #bfdbfe; color: #1e3a8a; }
     .status-ACCEPTED { background: #bbf7d0; color: #166534; }
     .status-REJECTED { background: #fecaca; color: #991b1b; }
+
+    /* Blockchain Proof Badge */
+    .proof-badge { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .toast-banner { background: #065f46; color: #ecfdf5; padding: 16px; border-radius: 8px; margin-bottom: 20px; display: none; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -48,8 +57,11 @@
     </form>
   </div>
 
-  <!-- DASHBOARD SCREEN (Hidden by default) -->
+  <!-- DASHBOARD SCREEN -->
   <div id="dashboardScreen" class="hidden">
+    <!-- Live Blockchain Confirmation Toast -->
+    <div id="blockchainToast" class="toast-banner"></div>
+
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
       <h2>Mentor Applications</h2>
       <div>
@@ -61,7 +73,14 @@
     <div class="container" style="padding: 0;">
       <table>
         <thead>
-          <tr><th>Name</th><th>Contact</th><th>Interest & Focus</th><th>Bio</th><th>Status</th><th>Date</th></tr>
+          <tr>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Interest & Focus</th>
+            <th>Status</th>
+            <th>Blockchain Proof</th>
+            <th>Date</th>
+          </tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -69,13 +88,9 @@
   </div>
 
   <script>
-    // Check for token on load
     const token = localStorage.getItem('adminToken');
-    if (token) {
-      showDashboard();
-    }
+    if (token) showDashboard();
 
-    // Handle Login
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('adminEmail').value;
@@ -89,7 +104,7 @@
       
       if (res.ok) {
         const data = await res.json();
-        localStorage.setItem('adminToken', data.token); // Save token
+        localStorage.setItem('adminToken', data.token);
         document.getElementById('loginError').style.display = 'none';
         showDashboard();
       } else {
@@ -101,7 +116,6 @@
       localStorage.removeItem('adminToken');
       document.getElementById('dashboardScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
-      document.getElementById('adminPassword').value = '';
     }
 
     async function showDashboard() {
@@ -111,28 +125,25 @@
       const currentToken = localStorage.getItem('adminToken');
       
       try {
-        // Include token in the Authorization header
         const response = await fetch('http://localhost:3000/api/admin/applications', {
           headers: { 'Authorization': `Bearer ${currentToken}` }
         });
         
         if (response.status === 401 || response.status === 403) {
-          logout(); // Token expired or invalid
+          logout();
           return;
         }
 
         const applications = await response.json();
         document.getElementById('totalCount').innerText = `${applications.length} Total`;
         
-        // Populate table (Reusing the HTML mapping logic from the previous step)
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = applications.map(app => {
           return `
-            <tr>
+            <tr id="row-${app.id}">
               <td style="font-weight: 500;">${app.fullName}</td>
               <td><div>${app.email}</div><div style="color: #64748b; font-size: 13px;">${app.phone}</div></td>
               <td><div>${app.areaOfInterest}</div><div style="color: #64748b; font-size: 13px;">${app.mentorshipFocus}</div></td>
-              <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${app.bio}">${app.bio}</td>
               <td>
                 <select class="status-select status-${app.status}" onchange="updateStatus(${app.id}, this)">
                   <option value="PENDING" ${app.status === 'PENDING' ? 'selected' : ''}>PENDING</option>
@@ -140,6 +151,9 @@
                   <option value="ACCEPTED" ${app.status === 'ACCEPTED' ? 'selected' : ''}>ACCEPTED</option>
                   <option value="REJECTED" ${app.status === 'REJECTED' ? 'selected' : ''}>REJECTED</option>
                 </select>
+              </td>
+              <td id="proof-${app.id}">
+                ${app.status === 'ACCEPTED' ? '<span class="proof-badge">✅ On-Chain</span>' : '<span style="color: #94a3b8; font-size: 12px;">Not on chain</span>'}
               </td>
               <td>${new Date(app.submittedAt).toLocaleDateString()}</td>
             </tr>
@@ -151,11 +165,20 @@
       }
     }
 
-    // Attach token to status updates too
     async function updateStatus(appId, selectElement) {
       const newStatus = selectElement.value;
+      const originalClass = selectElement.className;
       const currentToken = localStorage.getItem('adminToken');
+      const toast = document.getElementById('blockchainToast');
+      const proofCell = document.getElementById(`proof-${appId}`);
       
+      selectElement.className = `status-select status-${newStatus}`;
+      selectElement.disabled = true;
+
+      if (newStatus === 'ACCEPTED') {
+        proofCell.innerHTML = `<span style="color: #2563eb; font-size: 12px;">Mining block...</span>`;
+      }
+
       try {
         const response = await fetch(`http://localhost:3000/api/admin/applications/${appId}/status`, {
           method: 'PATCH',
@@ -166,10 +189,35 @@
           body: JSON.stringify({ status: newStatus })
         });
 
-        if (!response.ok) throw new Error();
-        selectElement.className = `status-select status-${newStatus}`;
+        if (!response.ok) throw new Error("Status update failed");
+
+        const data = await response.json();
+
+        if (data.blockchain) {
+          // Show on-chain proof badge in table
+          proofCell.innerHTML = `
+            <div><span class="proof-badge" title="Tx: ${data.blockchain.txHash}">Tx: ${data.blockchain.txHash.slice(0, 10)}...</span></div>
+            <div style="font-size: 11px; color: #166534; margin-top: 4px;">Block #${data.blockchain.blockNumber}</div>
+          `;
+
+          // Display screen toast banner
+          toast.style.display = 'block';
+          toast.innerHTML = `
+            <strong>🔗 Blockchain Confirmed!</strong><br>
+            SHA-256 Hash: <code>${data.blockchain.dataHash}</code><br>
+            Tx Hash: <code>${data.blockchain.txHash}</code> (Block #${data.blockchain.blockNumber})
+          `;
+          setTimeout(() => { toast.style.display = 'none'; }, 10000);
+        } else {
+          proofCell.innerHTML = `<span style="color: #94a3b8; font-size: 12px;">Not on chain</span>`;
+        }
+
       } catch (error) {
-        alert("Update failed. You may need to log in again.");
+        alert("Update failed. Check terminal to ensure Hardhat and Node are running.");
+        selectElement.className = originalClass;
+        selectElement.value = originalClass.split('status-')[1];
+      } finally {
+        selectElement.disabled = false;
       }
     }
   </script>
