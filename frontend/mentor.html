@@ -103,7 +103,11 @@
         errorMsg.style.display = 'none';
 
         // Send to backend API
-        const response = await fetch('http://localhost:3000/api/applications', {
+        const response = await fetch('https://becomementore.onrender.com/api/applications', {
+
+
+        
+        // const response = await fetch('http://localhost:3000/api/applications', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
