@@ -131,32 +131,10 @@ const contract = new ethers.Contract(process.env.BLOCKCHAIN_CONTRACT_ADDRESS, co
 // -------------------v3-----------------
 app.patch('/api/admin/applications/:id/status', authenticateAdmin, async (req, res) => {
   try {
-    // 1. Strict ID Validation
-    const appId = parseInt(req.params.id, 10);
-    if (isNaN(appId)) {
-      return res.status(400).json({ error: "Invalid application ID format." });
-    }
+    const appId = parseInt(req.params.id);
+    const { status } = req.body; // PENDING, REVIEWING, ACCEPTED, REJECTED
 
-    // 2. Strict Input Whitelisting (Prevent arbitrary string injection)
-    const { status } = req.body; 
-    const allowedStatuses = ['PENDING', 'REVIEWING', 'ACCEPTED', 'REJECTED'];
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status value provided." });
-    }
-
-    // 3. Resource Existence Check (Prevents unhandled Prisma crash errors)
-    const existingApp = await prisma.application.findUnique({
-      where: { id: appId }
-    });
-
-    if (!existingApp) {
-      return res.status(404).json({ error: "Application not found." });
-    }
-
-    // 4. Idempotency Check (Prevent duplicate blockchain writes if already accepted)
-    const wasAlreadyAccepted = existingApp.status === 'ACCEPTED';
-
-    // 5. Update the database securely via Prisma
+    // 1. Update the traditional database
     const updatedApplication = await prisma.application.update({
       where: { id: appId },
       data: { status: status }
@@ -165,15 +143,15 @@ app.patch('/api/admin/applications/:id/status', authenticateAdmin, async (req, r
     let blockchainData = null;
     let actionMessage = "";
 
-    // 6. Conditional Blockchain Handling with Re-entrancy protection
-    if (status === 'ACCEPTED' && !wasAlreadyAccepted) {
+    // 2. Conditional Blockchain Handling
+    if (status === 'ACCEPTED') {
       // Create secure anonymous fingerprint (SHA-256)
       const rawData = `${updatedApplication.id}-${updatedApplication.email}-${updatedApplication.status}`;
       const dataHash = crypto.createHash('sha256').update(rawData).digest('hex');
       
       console.log(`Securing hash to blockchain: ${dataHash}`);
 
-      // Send to local Hardhat node or Polygon network
+      // Send to local Hardhat node or Polygon
       const tx = await contract.storeHash(dataHash);
       const receipt = await tx.wait();
 
@@ -183,11 +161,9 @@ app.patch('/api/admin/applications/:id/status', authenticateAdmin, async (req, r
         blockNumber: receipt.blockNumber
       };
       actionMessage = "Mentor Approved: Cryptographic proof successfully engraved on-chain.";
-    } else if (status === 'ACCEPTED' && wasAlreadyAccepted) {
-      actionMessage = "Status is already ACCEPTED. Blockchain write skipped to prevent redundant gas fees.";
     } else {
       // For REJECTED, REVIEWING, or PENDING
-      actionMessage = `Status updated to ${status}. Stored securely in database audit logs.`;
+      actionMessage = `Status updated to ${status}. Stored securely in database audit logs (Blockchain write skipped for privacy/efficiency).`;
     }
 
     res.status(200).json({ 
@@ -197,8 +173,7 @@ app.patch('/api/admin/applications/:id/status', authenticateAdmin, async (req, r
     });
 
   } catch (error) {
-    // Log the actual error internally for debugging, but never leak system stack traces to the client
-    console.error("Secure status update error:", error);
-    res.status(500).json({ error: "Failed to process application update securely." });
+    console.error("Status update error:", error);
+    res.status(500).json({ error: "Failed to process application update." });
   }
 });
