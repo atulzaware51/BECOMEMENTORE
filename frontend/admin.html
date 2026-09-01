@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -24,7 +24,7 @@
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 5px; font-weight: 500; }
     input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
-    button { width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    button { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
     /* Status Dropdowns */
     .status-select { padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid transparent; cursor: pointer; outline: none; }
@@ -45,7 +45,6 @@
 <body>
 
   <!-- LOGIN SCREEN -->
-  
   <div id="loginScreen" class="container login-box">
     <h2>Admin Portal Login</h2>
     <div id="loginError" style="color: #dc2626; margin-bottom: 12px; display: none;">Invalid admin credentials</div>
@@ -58,26 +57,18 @@
         <label>Password</label>
         <input type="password" id="adminPassword" required value="supersecretpassword123">
       </div>
-      <button type="submit">Sign In</button>
+      <button type="submit" style="width: 100%;">Sign In</button>
     </form>
   </div>
 
   <!-- DASHBOARD SCREEN -->
-
-  
   <div id="dashboardScreen" class="hidden">
-
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-  <h2>Mentor Applications Review</h2>
-  <div>
-    <!-- NEW EXPORT BUTTON -->
-    <button onclick="exportToExcel()" style="width: auto; padding: 8px 16px; background: #16a34a; margin-right: 10px;">📊 Download Excel/CSV</button>
-    <button onclick="logout()" style="width: auto; padding: 8px 16px; background: #ef4444;">Logout</button>
-  </div>
-</div>
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
       <h2>Mentor Applications Review</h2>
-      <button onclick="logout()" style="width: auto; padding: 8px 16px; background: #ef4444;">Logout</button>
+      <div>
+        <button onclick="exportToExcel()" style="background: #16a34a; margin-right: 10px;">📊 Download Excel/CSV</button>
+        <button onclick="logout()" style="background: #ef4444;">Logout</button>
+      </div>
     </div>
 
     <div class="container" style="padding: 0; overflow-x: auto;">
@@ -104,34 +95,6 @@
   </div>
 
   <script>
-async function exportToExcel() {
-  const token = localStorage.getItem('adminToken');
-  
-  try {
-    const response = await fetch('http://localhost:3000/api/admin/export-excel', {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (!response.ok) throw new Error("Export failed");
-
-    // Convert response into a downloadable file blob
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `mentor-applications-${new Date().toISOString().split('T')[0]}.csv`;
-    
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-
-  } catch (err) {
-    alert("Failed to download spreadsheet. Ensure you are logged in as admin.");
-  }
-}
-    
     const token = localStorage.getItem('adminToken');
     if (token) loadDashboard();
 
@@ -228,204 +191,40 @@ async function exportToExcel() {
 
       } catch (err) {
         inspector.innerHTML += `\n[ERROR] Failed to communicate with backend server.`;
+      }
+    }
+
+    async function exportToExcel() {
+      const token = localStorage.getItem('adminToken');
+      const inspector = document.getElementById('inspectorLog');
+      
+      try {
+        inspector.innerHTML += `\n[ACTION] Requesting spreadsheet export from backend...`;
+        const response = await fetch('http://localhost:3000/api/admin/export-excel', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error("Export failed");
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mentor-applications-${new Date().toISOString().split('T')[0]}.csv`;
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        inspector.innerHTML += `\n[SUCCESS] Spreadsheet downloaded successfully.\n----------------------------------------`;
+        inspector.scrollTop = inspector.scrollHeight;
+      } catch (err) {
+        alert("Failed to download spreadsheet. Ensure you are logged in as admin.");
+        inspector.innerHTML += `\n[ERROR] Spreadsheet export failed.`;
       }
     }
   </script>
 </body>
 </html>
-<!-- -----------------------v1----------------------------- -->
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - Mentor Management</title>
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #0f172a;
-      --border: #e2e8f0;
-      --primary: #2563eb;
-    }
-    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 30px; }
-    .container { background: var(--card); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px; }
-    table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px;}
-    th, td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
-    th { background: #f1f5f9; font-weight: 600; color: #475569; text-transform: uppercase; font-size: 12px; }
-    .hidden { display: none !important; }
-    
-    /* Login */
-    .login-box { max-width: 400px; margin: 80px auto; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: 500; }
-    input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
-    button { width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-
-    /* Status Dropdowns */
-    .status-select { padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid transparent; cursor: pointer; outline: none; }
-    .status-PENDING { background: #fef08a; color: #854d0e; }
-    .status-REVIEWING { background: #bfdbfe; color: #1e3a8a; }
-    .status-ACCEPTED { background: #bbf7d0; color: #166534; }
-    .status-REJECTED { background: #fecaca; color: #991b1b; }
-
-    /* Proof Badges */
-    .badge-chain { background: #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; }
-    .badge-db { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
-
-    /* Blockchain Inspector Box (On-Screen Log) */
-    .inspector-box { background: #0f172a; color: #38bdf8; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 13px; max-height: 180px; overflow-y: auto; margin-top: 20px; }
-    .inspector-title { color: #94a3b8; font-size: 11px; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
-  </style>
-</head>
-<body>
-
-  <!-- LOGIN SCREEN -->
-  <div id="loginScreen" class="container login-box">
-    <h2>Admin Portal Login</h2>
-    <div id="loginError" style="color: #dc2626; margin-bottom: 12px; display: none;">Invalid admin credentials</div>
-    <form id="loginForm">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="adminEmail" required value="admin@website.com">
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="adminPassword" required value="supersecretpassword123">
-      </div>
-      <button type="submit">Sign In</button>
-    </form>
-  </div>
-
-  <!-- DASHBOARD SCREEN -->
-  <div id="dashboardScreen" class="hidden">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-      <h2>Mentor Applications Review</h2>
-      <button onclick="logout()" style="width: auto; padding: 8px 16px; background: #ef4444;">Logout</button>
-    </div>
-
-    <div class="container" style="padding: 0; overflow-x: auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>Applicant Name</th>
-            <th>Email & Phone</th>
-            <th>Mentorship Focus</th>
-            <th>Status Control</th>
-            <th>Audit & Verification Proof</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-
-    <!-- ON-SCREEN BLOCKCHAIN & SYSTEM INSPECTOR -->
-    <div class="container">
-      <div class="inspector-title">🖥️ Live System & Blockchain Activity Inspector</div>
-      <div id="inspectorLog" class="inspector-box">System ready. Change any application status above to inspect backend execution...</div>
-    </div>
-  </div>
-
-  <script>
-    const token = localStorage.getItem('adminToken');
-    if (token) loadDashboard();
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('adminEmail').value;
-      const password = document.getElementById('adminPassword').value;
-      
-      const res = await fetch('http://localhost:3000/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem('adminToken', data.token);
-        loadDashboard();
-      } else {
-        document.getElementById('loginError').style.display = 'block';
-      }
-    });
-
-    function logout() {
-      localStorage.removeItem('adminToken');
-      document.getElementById('dashboardScreen').classList.add('hidden');
-      document.getElementById('loginScreen').classList.remove('hidden');
-    }
-
-    async function loadDashboard() {
-      document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('dashboardScreen').classList.remove('hidden');
-      
-      const res = await fetch('http://localhost:3000/api/admin/applications', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-      });
-      
-      if (res.status === 401) return logout();
-      const apps = await res.json();
-      
-      document.getElementById('tableBody').innerHTML = apps.map(app => `
-        <tr>
-          <td style="font-weight: 500;">${app.fullName}</td>
-          <td><div>${app.email}</div><span style="color: #64748b; font-size: 12px;">${app.phone}</span></td>
-          <td>${app.mentorshipFocus}</td>
-          <td>
-            <select class="status-select status-${app.status}" onchange="changeStatus(${app.id}, this)">
-              <option value="PENDING" ${app.status === 'PENDING' ? 'selected' : ''}>PENDING</option>
-              <option value="REVIEWING" ${app.status === 'REVIEWING' ? 'selected' : ''}>REVIEWING</option>
-              <option value="ACCEPTED" ${app.status === 'ACCEPTED' ? 'selected' : ''}>ACCEPTED</option>
-              <option value="REJECTED" ${app.status === 'REJECTED' ? 'selected' : ''}>REJECTED</option>
-            </select>
-          </td>
-          <td id="proof-${app.id}">
-            ${app.status === 'ACCEPTED' ? '<span class="badge-chain">🔒 Verified On-Chain</span>' : '<span class="badge-db">💾 DB Audit Log</span>'}
-          </td>
-          <td>${new Date(app.submittedAt).toLocaleDateString()}</td>
-        </tr>
-      `).join('');
-    }
-
-    async function changeStatus(id, select) {
-      const newStatus = select.value;
-      const proofCell = document.getElementById(`proof-${id}`);
-      const inspector = document.getElementById('inspectorLog');
-      
-      select.className = `status-select status-${newStatus}`;
-      inspector.innerHTML += `\n[ACTION] Updating Application #${id} status to '${newStatus}'...`;
-      inspector.scrollTop = inspector.scrollHeight;
-
-      try {
-        const res = await fetch(`http://localhost:3000/api/admin/applications/${id}/status`, {
-          method: 'PATCH',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-          },
-          body: JSON.stringify({ status: newStatus })
-        });
-
-        const data = await res.json();
-
-        if (newStatus === 'ACCEPTED' && data.blockchain) {
-          proofCell.innerHTML = `<span class="badge-chain" title="Tx: ${data.blockchain.txHash}">Tx: ${data.blockchain.txHash.slice(0, 10)}...</span>`;
-          inspector.innerHTML += `\n   ↳ [BLOCKCHAIN SUCCESS] SHA-256 Hash Generated: ${data.blockchain.dataHash}`;
-          inspector.innerHTML += `\n   ↳ [SMART CONTRACT] Mined into Block #${data.blockchain.blockNumber} (Tx: ${data.blockchain.txHash})`;
-        } else {
-          proofCell.innerHTML = `<span class="badge-db">💾 DB Audit Log</span>`;
-          inspector.innerHTML += `\n   ↳ [DATABASE LOG] ${data.message}`;
-        }
-
-        inspector.innerHTML += `\n[SUCCESS] ${data.message}\n----------------------------------------`;
-        inspector.scrollTop = inspector.scrollHeight;
-
-      } catch (err) {
-        inspector.innerHTML += `\n[ERROR] Failed to communicate with backend server.`;
-      }
-    }
-  </script>
-</body>
-</html> -->
